@@ -1,51 +1,59 @@
 pipeline {
     agent any
-
-    parameters {
-        string(name: 'BRANCH_NAME', defaultValue: 'main', description: 'Git Branch')
-    }
-
     environment {
-        APP_NAME = 'CategoryProduct'
+        GOOGLE_APPLICATION_CREDENTIALS = credentials('gcp-service-account') // Jenkins credential ID
+        PROJECT_ID = 'springbootapp-gke'
+        REPO = 'springboot-app'
+        IMAGE_NAME = 'springboot-app'
+        IMAGE_TAG = 'latest'
+        REGION = 'us-central1'
     }
-
     stages {
         stage('Checkout') {
             steps {
-                git branch: "${params.BRANCH_NAME}", url: 'https://github.com/Yogeshjathar/CategoryProduct.git'
-//                 checkout scm
+                git branch: 'main', url: 'https://github.com/<your-username>/springboot-app.git'
             }
         }
-
-        stage('Build') {
+        stage('Build Spring Boot App') {
             steps {
-                echo "Building ${env.APP_NAME} from ${params.BRANCH_NAME} branch"
-                bat 'mvn clean install -DskipTests'
-
+                sh 'mvn clean package -DskipTests'
             }
         }
-
-        stage('Test') {
+        stage('Authenticate with GCP') {
             steps {
-                echo 'Running tests...'
-                bat 'mvn clean test'
+                sh """
+                gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}
+                gcloud auth configure-docker ${REGION}-docker.pkg.dev
+                """
             }
         }
-
-        stage('Package') {
+        stage('Build Docker Image') {
             steps {
-                echo 'Packaging application...'
-                bat 'mvn package'
+                sh """
+                docker build -t ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO}/${IMAGE_NAME}:${IMAGE_TAG} .
+                """
+            }
+        }
+        stage('Push Docker Image') {
+            steps {
+                sh """
+                docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO}/${IMAGE_NAME}:${IMAGE_TAG}
+                """
+            }
+        }
+        stage('Deploy to GKE') {
+            steps {
+                sh """
+                gcloud container clusters get-credentials gke-cluster --zone ${REGION}-a --project ${PROJECT_ID}
+                kubectl apply -f deployment.yml
+                kubectl set image deployment/springboot-app springboot-app=${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO}/${IMAGE_NAME}:${IMAGE_TAG}
+                """
             }
         }
     }
-
     post {
-        success {
-            echo 'Pipeline executed successfully.'
-        }
-        failure {
-            echo 'Pipeline failed. Please check the logs.'
+        always {
+            cleanWs()
         }
     }
 }
