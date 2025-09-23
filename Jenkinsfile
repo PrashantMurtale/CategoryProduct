@@ -17,7 +17,7 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/<your-username>/<repo>.git'
+                git branch: 'main', url: 'git@github.com:PrashantMurtale/CategoryProduct.git'
             }
         }
 
