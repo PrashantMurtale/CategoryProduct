@@ -2,6 +2,7 @@ pipeline {
     agent any
 
     environment {
+        GOOGLE_APPLICATION_CREDENTIALS = '/var/lib/jenkins/jenkins-sa.json'
         PROJECT_ID = 'springbootapp-gke'
         CLUSTER_NAME = 'gke-cluster'
         ZONE = 'us-central1-a'
