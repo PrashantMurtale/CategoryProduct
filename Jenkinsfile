@@ -2,60 +2,61 @@ pipeline {
     agent any
 
     environment {
-        GOOGLE_APPLICATION_CREDENTIALS = credentials('gcp-service-account') // Jenkins credential ID
         PROJECT_ID = 'springbootapp-gke'
-        REPO = 'springboot-app'
+        CLUSTER_NAME = 'gke-cluster'
+        ZONE = 'us-central1-a'
         IMAGE_NAME = 'springboot-app'
         IMAGE_TAG = 'latest'
-        REGION = 'us-central1'
-        CLUSTER_NAME = 'springboot-gke'
+        GCP_CREDENTIALS = credentials('gcp-service-account') // Jenkins credential ID
+        DOCKER_REGISTRY = 'gcr.io' // or your Docker Hub registry
+        SONARQUBE_SERVER = 'SonarQube' // Jenkins SonarQube server name
     }
 
     stages {
+
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/PrashantMurtale/CategoryProduct.git'
+                git branch: 'main', url: 'https://github.com/<your-username>/<repo>.git'
             }
         }
 
-        stage('Build Spring Boot App') {
+        stage('Set up GCP') {
             steps {
-                sh 'mvn clean package -DskipTests'
+                script {
+                    // Activate GCP service account
+                    writeFile file: 'jenkins-sa.json', text: GCP_CREDENTIALS
+                    sh 'gcloud auth activate-service-account --key-file=jenkins-sa.json'
+                    sh "gcloud config set project ${PROJECT_ID}"
+                    sh "gcloud container clusters get-credentials ${CLUSTER_NAME} --zone ${ZONE} --project ${PROJECT_ID}"
+                }
             }
         }
 
-        stage('Authenticate with GCP') {
+        stage('SonarQube Analysis') {
             steps {
-                sh """
-                gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}
-                gcloud auth configure-docker ${REGION}-docker.pkg.dev
-                """
+                withSonarQubeEnv(SONARQUBE_SERVER) {
+                    sh './gradlew sonarqube' // or `mvn sonar:sonar` if Maven
+                }
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                sh """
-                docker build -t ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO}/${IMAGE_NAME}:${IMAGE_TAG} .
-                """
+                sh "docker build -t ${DOCKER_REGISTRY}/${PROJECT_ID}/${IMAGE_NAME}:${IMAGE_TAG} ."
             }
         }
 
         stage('Push Docker Image') {
             steps {
-                sh """
-                docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO}/${IMAGE_NAME}:${IMAGE_TAG}
-                """
+                sh "docker push ${DOCKER_REGISTRY}/${PROJECT_ID}/${IMAGE_NAME}:${IMAGE_TAG}"
             }
         }
 
         stage('Deploy to GKE') {
             steps {
                 sh """
-                gcloud container clusters get-credentials ${CLUSTER_NAME} --region ${REGION} --project ${PROJECT_ID}
-                kubectl apply -f k8s-manifests/deployment.yaml
-                kubectl set image deployment/springboot-app springboot-app=${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO}/${IMAGE_NAME}:${IMAGE_TAG}
-                kubectl rollout status deployment/springboot-app
+                    kubectl set image deployment/${IMAGE_NAME} ${IMAGE_NAME}=${DOCKER_REGISTRY}/${PROJECT_ID}/${IMAGE_NAME}:${IMAGE_TAG} --record
+                    kubectl rollout status deployment/${IMAGE_NAME}
                 """
             }
         }
@@ -63,7 +64,7 @@ pipeline {
 
     post {
         always {
-            cleanWs()
+            sh 'rm -f jenkins-sa.json'
         }
     }
 }
