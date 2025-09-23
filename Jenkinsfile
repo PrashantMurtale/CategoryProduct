@@ -35,11 +35,21 @@ pipeline {
             }
         }
 
+        stage('Build with Maven') {
+            steps {
+                script {
+                    sh """
+                        echo "Building Spring Boot JAR..."
+                        mvn clean package -DskipTests
+                    """
+                }
+            }
+        }
+
         stage('SonarQube Analysis') {
             steps {
                 script {
                     sh 'echo "SonarQube analysis step (placeholder)"'
-                    // Replace with actual SonarQube scanner command if needed
                 }
             }
         }
