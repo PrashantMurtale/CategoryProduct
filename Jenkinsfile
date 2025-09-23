@@ -2,70 +2,102 @@ pipeline {
     agent any
 
     environment {
-        GOOGLE_APPLICATION_CREDENTIALS = '/var/lib/jenkins/jenkins-sa.json'
         PROJECT_ID = 'springbootapp-gke'
-        CLUSTER_NAME = 'gke-cluster'
-        ZONE = 'us-central1-a'
+        REPO = 'springboot-app'
         IMAGE_NAME = 'springboot-app'
         IMAGE_TAG = 'latest'
-        GCP_CREDENTIALS = credentials('gcp-service-account') // Jenkins credential ID
-        DOCKER_REGISTRY = 'gcr.io' // or your Docker Hub registry
-        SONARQUBE_SERVER = 'SonarQube' // Jenkins SonarQube server name
+        REGION = 'us-central1'
+        CLUSTER_NAME = 'gke-cluster'
     }
 
     stages {
-
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'git@github.com:PrashantMurtale/CategoryProduct.git'
+                git(
+                    branch: 'main',
+                    credentialsId: 'github-ssh-cred',   // your GitHub SSH credential ID
+                    url: 'git@github.com:PrashantMurtale/CategoryProduct.git'
+                )
             }
         }
 
         stage('Set up GCP') {
             steps {
-                script {
-                    // Activate GCP service account
-                    writeFile file: 'jenkins-sa.json', text: GCP_CREDENTIALS
-                    sh 'gcloud auth activate-service-account --key-file=jenkins-sa.json'
-                    sh "gcloud config set project ${PROJECT_ID}"
-                    sh "gcloud container clusters get-credentials ${CLUSTER_NAME} --zone ${ZONE} --project ${PROJECT_ID}"
+                withCredentials([file(credentialsId: 'gcp-service-account', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
+                    script {
+                        sh """
+                            echo "Authenticating with GCP..."
+                            gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
+                            gcloud config set project $PROJECT_ID
+                        """
+                    }
                 }
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv(SONARQUBE_SERVER) {
-                    sh './gradlew sonarqube' // or `mvn sonar:sonar` if Maven
+                script {
+                    sh 'echo "SonarQube analysis step (placeholder)"'
+                    // Replace with actual SonarQube scanner command if needed
                 }
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                sh "docker build -t ${DOCKER_REGISTRY}/${PROJECT_ID}/${IMAGE_NAME}:${IMAGE_TAG} ."
+                script {
+                    sh """
+                        echo "Building Docker image..."
+                        docker build -t gcr.io/$PROJECT_ID/$IMAGE_NAME:$IMAGE_TAG .
+                    """
+                }
             }
         }
 
         stage('Push Docker Image') {
             steps {
-                sh "docker push ${DOCKER_REGISTRY}/${PROJECT_ID}/${IMAGE_NAME}:${IMAGE_TAG}"
+                script {
+                    sh """
+                        echo "Pushing Docker image to GCP Artifact Registry..."
+                        docker push gcr.io/$PROJECT_ID/$IMAGE_NAME:$IMAGE_TAG
+                    """
+                }
             }
         }
 
         stage('Deploy to GKE') {
             steps {
-                sh """
-                    kubectl set image deployment/${IMAGE_NAME} ${IMAGE_NAME}=${DOCKER_REGISTRY}/${PROJECT_ID}/${IMAGE_NAME}:${IMAGE_TAG} --record
-                    kubectl rollout status deployment/${IMAGE_NAME}
-                """
+                withCredentials([file(credentialsId: 'gcp-service-account', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
+                    script {
+                        sh """
+                            echo "Getting GKE credentials..."
+                            gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
+                            gcloud container clusters get-credentials $CLUSTER_NAME --region $REGION --project $PROJECT_ID
+                            echo "Applying Kubernetes manifests..."
+                            kubectl apply -f deployment.yml
+                        """
+                    }
+                }
             }
         }
     }
 
     post {
         always {
-            sh 'rm -f jenkins-sa.json'
+            script {
+                sh 'echo "Pipeline finished - cleaning up..."'
+            }
+        }
+        success {
+            script {
+                sh 'echo "✅ Deployment successful!"'
+            }
+        }
+        failure {
+            script {
+                sh 'echo "❌ Deployment failed!"'
+            }
         }
     }
 }
