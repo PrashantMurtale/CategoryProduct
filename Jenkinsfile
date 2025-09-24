@@ -4,7 +4,7 @@ pipeline {
     environment {
         PROJECT_ID = 'springbootapp-gke'
         REPO = 'springboot-app'
-        IMAGE_NAME = 'springboot-app'
+        IMAGE_NAME   = "us-central1-a-docker.pkg.dev/springbootapp-gke/springboot-app/springboot-app"
         IMAGE_TAG = 'latest'
         REGION = 'us-central1'
         CLUSTER_NAME = 'gke-cluster'
@@ -46,14 +46,22 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Docker Auth') {
             steps {
-                script {
+                withCredentials([file(credentialsId: 'gcp-service-account', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
                     sh """
-                        echo "Building Docker image..."
-                        docker build -t gcr.io/$PROJECT_ID/$IMAGE_NAME:$IMAGE_TAG .
+                        gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
+                        gcloud auth configure-docker ${REGION}-docker.pkg.dev -q
                     """
                 }
+            }
+        }
+         stage('Build Docker Image') {
+            steps {
+                sh """
+                    echo Building Docker image...
+                    docker build -t springboot-app:latest .
+                """
             }
         }
 
@@ -62,7 +70,7 @@ pipeline {
                 script {
                     sh """
                         echo "Pushing Docker image to GCP Artifact Registry..."
-                        docker push gcr.io/$PROJECT_ID/$IMAGE_NAME:$IMAGE_TAG
+                        docker push gcr.io/springbootapp-gke/springboot-app:latest
                     """
                 }
             }
