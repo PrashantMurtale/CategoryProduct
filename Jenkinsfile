@@ -4,7 +4,7 @@ pipeline {
     environment {
         PROJECT_ID = 'springbootapp-gke'
         REPO = 'springboot-app'
-        IMAGE_NAME   = "us-central1-a-docker.pkg.dev/springbootapp-gke/springboot-app/springboot-app"
+        IMAGE_NAME = "us-central1-a-docker.pkg.dev/springbootapp-gke/springboot-app/springboot-app"
         IMAGE_TAG = 'latest'
         REGION = 'us-central1'
         CLUSTER_NAME = 'gke-cluster'
