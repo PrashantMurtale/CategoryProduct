@@ -46,14 +46,6 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis') {
-            steps {
-                script {
-                    sh 'echo "SonarQube analysis step (placeholder)"'
-                }
-            }
-        }
-
         stage('Build Docker Image') {
             steps {
                 script {
