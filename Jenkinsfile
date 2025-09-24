@@ -84,7 +84,6 @@ pipeline {
                         gcloud container clusters get-credentials $CLUSTER_NAME --zone $ZONE --project $PROJECT_ID
                         echo "Applying Kubernetes manifests..."
                         kubectl apply -f k8s/deployment.yaml --validate=false
-						kubectl apply -f k8s/service.yaml
                     '''
                 }
             }
