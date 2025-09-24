@@ -84,8 +84,8 @@ pipeline {
                             gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
                             gcloud container clusters get-credentials $CLUSTER_NAME --zone us-central1-a --project $PROJECT_ID
                             echo "Applying Kubernetes manifests..."
-                            kubectl apply -f deployment.yaml
-                            kubectl apply -f service.yaml
+                            kubectl apply -f k8s/deployment.yaml
+                            kubectl apply -f k8s/service.yaml
                         """
                     }
                 }
