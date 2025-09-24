@@ -70,7 +70,7 @@ pipeline {
                 script {
                     sh """
                         echo "Pushing Docker image to GCP Artifact Registry..."
-                        docker push us-central1-docker.pkg.dev/springbootapp-gke/springboot-app/springboot-app:latest
+                        docker push us-central1-docker.pkg.dev/springbootapp-gke/springboot-app/springboot-app:latest .
                     """
                 }
             }
