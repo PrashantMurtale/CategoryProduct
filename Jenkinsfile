@@ -82,7 +82,7 @@ pipeline {
 						export PATH=/home/murtale_prashant/google-cloud-sdk/bin:$PATH
 						chmod +x /home/murtale_prashant/google-cloud-sdk/bin/gke-gcloud-auth-plugin
                         gcloud auth activate-service-account --key-file=$GCP_KEY
-                        gcloud container clusters get-credentials $CLUSTER_NAME --zone us-central1-a --project $PROJECT_ID
+                        gcloud container clusters get-credentials $CLUSTER_NAME --zone $ZONE --project $PROJECT_ID
                         echo "Applying Kubernetes manifests..."
                         kubectl apply -f k8s/deployment.yaml --validate=false
                     '''
