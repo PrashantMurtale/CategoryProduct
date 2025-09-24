@@ -76,10 +76,11 @@ pipeline {
 
         stage('Deploy to GKE') {
             steps {
-                withCredentials([file(credentialsId: 'gcp-service-account', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
+                withCredentials([file(credentialsId: 'gcp-service-account', variable: 'GCP_KEY')]) {
                     sh '''
-                        echo "Getting GKE credentials..."
-                        gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
+                        export PATH=/usr/local/bin:$PATH
+                        gcloud auth activate-service-account --key-file=$GCP_KEY
+                        gcloud config set container/use_gke_gcloud_auth_plugin true
                         gcloud container clusters get-credentials $CLUSTER_NAME --zone us-central1-a --project $PROJECT_ID
                         echo "Applying Kubernetes manifests..."
                         kubectl apply -f k8s/deployment.yaml --validate=false
