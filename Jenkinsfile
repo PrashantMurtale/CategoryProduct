@@ -60,7 +60,7 @@ pipeline {
             steps {
                 sh """
                     echo Building Docker image...
-                    docker build -t springboot-app:latest .
+                    docker build -t us-central1-docker.pkg.dev/springbootapp-gke/springboot-app/springboot-app:latest
                 """
             }
         }
