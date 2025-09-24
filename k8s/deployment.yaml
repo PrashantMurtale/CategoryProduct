@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: springboot-app
-          image: gcr.io/springbootapp-gke/springboot-app:latest
+          image: us-central1-docker.pkg.dev/springbootapp-gke/springboot-app/springboot-app:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
