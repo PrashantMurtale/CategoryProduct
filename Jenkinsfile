@@ -63,8 +63,7 @@ pipeline {
                     docker build -t us-central1-docker.pkg.dev/springbootapp-gke/springboot-app/springboot-app:latest .
                 """
                 }
-            }
-        }    
+            }   
         stage('Push Docker Image') {
             steps {
                 script {
