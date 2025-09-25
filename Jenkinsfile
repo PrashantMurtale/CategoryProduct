@@ -83,7 +83,7 @@ pipeline {
                         gcloud auth activate-service-account --key-file=$GCP_KEY
                         gcloud container clusters get-credentials $CLUSTER_NAME --zone $ZONE --project $PROJECT_ID
                         echo "Applying Kubernetes manifests..."
-                        kubectl apply -f k8s/deployment.yaml --validate=false
+                        kubectl apply -f k8s/mysqlspringdeployment.yaml --validate=false
                     '''
                 }
             }
