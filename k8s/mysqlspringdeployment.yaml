@@ -95,7 +95,7 @@ spec:
     spec:
       containers:
       - name: springboot-app
-        image: gcr.io/YOUR_PROJECT_ID/springboot-app:latest
+        image: us-central1-docker.pkg.dev/springbootapp-gke/springboot-app/springboot-app:latest
         ports:
         - containerPort: 8080
         env:
