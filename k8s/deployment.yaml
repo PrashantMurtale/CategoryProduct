@@ -2,6 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: springboot-app
+  labels:
+    app: springboot-app
 spec:
   replicas: 1
   selector:
@@ -13,34 +15,48 @@ spec:
         app: springboot-app
     spec:
       containers:
-      - name: springboot-app
-        image: us-central1-docker.pkg.dev/springbootapp-gke/springboot-app/springboot-app:latest
-        ports:
-        - containerPort: 8080
-        env:
-        - name: SPRING_DATASOURCE_URL
-          value: jdbc:mysql://mysql-service:3306/categorydb
-        - name: SPRING_DATASOURCE_USERNAME
-          valueFrom:
-            secretKeyRef:
-              name: mysql-secret
-              key: username
-        - name: SPRING_DATASOURCE_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: mysql-secret
-              key: password
-        - name: SPRING_PROFILES_ACTIVE
-          value: dev
+        - name: springboot-app
+          image: us-central1-docker.pkg.dev/springbootapp-gke/springboot-app/springboot-app:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: dev
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:mysql://mysql-service:3306/mydb
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: username
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: password
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+      restartPolicy: Always
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: springboot-app-service
+  name: springboot-service
 spec:
-  type: LoadBalancer
   selector:
     app: springboot-app
+  type: LoadBalancer
   ports:
     - protocol: TCP
       port: 80
