@@ -21,7 +21,7 @@ public class AppConfig {
         UserDetails user1 = User.builder().username("Yogesh").password(passwordEncoder().encode("1234")).roles("Admin","User").build();
         UserDetails user2 = User.builder().username("Prashant").password(passwordEncoder().encode("1234")).roles("Admin").build();
         UserDetails user3 = User.builder().username("Ram").password(passwordEncoder().encode("Ram")).roles("User").build();
-
+        UserDetails user4 = User.builder().username("admin").password(passwordEncoder().encode("admin123")).roles("User").build();
         return new InMemoryUserDetailsManager(user1,user2,user3);
     }
 
