@@ -84,11 +84,6 @@ pipeline {
                         gcloud container clusters get-credentials $CLUSTER_NAME --zone $ZONE --project $PROJECT_ID
                         echo "Applying Kubernetes manifests..."
                         kubectl apply -f k8s/mysqlspringdeployment.yaml --validate=false
-						kubectl apply -f k8s/prometheus-configmap.yml --validate=false
-						kubectl apply -f k8s/prometheus-deployment.yml --validate=false
-						kubectl apply -f k8s/grafana-secret.yml --validate=false
-						kubectl apply -f k8s/grafana-pvc.yml --validate=false
-						kubectl apply -f k8s/grafana-deployment.yml --validate=false
                     '''
                 }
             }
