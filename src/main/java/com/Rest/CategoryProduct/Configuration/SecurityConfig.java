@@ -23,13 +23,13 @@ public class SecurityConfig {
     @Autowired
     private JwtAuthenticationFilter filter;
 
-    // ✅ AuthenticationManager bean (required for AuthController)
+    // ✅ AuthenticationManager bean
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 
-    // ✅ PasswordEncoder bean (required for encoding & verifying passwords)
+    // ✅ PasswordEncoder bean
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
