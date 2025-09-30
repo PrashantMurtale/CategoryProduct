@@ -3,10 +3,8 @@ spring:
   config:
     activate:
       on-profile: prod
-
-#   MySQL Database Configuration
   datasource:
-    url: jdbc:mysql://34.93.20.112:3306/categorydb
+    url: jdbc:mysql://mysql-service.default.svc.cluster.local:3306/categorydb  # Updated to use Kubernetes service
     username: root
     password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -14,3 +12,13 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+
+# Prometheus and Actuator configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: prometheus, health, info
+  endpoint:
+    prometheus:
+      enabled: true
