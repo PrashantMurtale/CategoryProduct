@@ -26,20 +26,23 @@ spec:
         app: prometheus
     spec:
       securityContext:
-        fsGroup: 65534  # Group ID for 'nobody' user, for volume permissions
+        fsGroup: 65534  # Group ID for 'nobody'
       initContainers:
       - name: fix-permissions
         image: busybox:latest
-        command: ["sh", "-c", "chown 65534:65534 /prometheus && chmod -R 775 /prometheus"]
+        command: ["sh", "-c", "chown -R 65534:65534 /prometheus && chmod -R 777 /prometheus"]
         volumeMounts:
         - name: prometheus-storage
           mountPath: /prometheus
+        securityContext:
+          runAsUser: 0  # Run as root to ensure permission changes
       containers:
       - name: prometheus
         image: prom/prometheus:latest
         args:
         - '--config.file=/etc/prometheus/prometheus.yml'
         - '--storage.tsdb.path=/prometheus'
+        - '--web.enable-lifecycle'  # Optional: for Prometheus reloads
         ports:
         - containerPort: 9090
         volumeMounts:
