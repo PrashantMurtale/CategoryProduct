@@ -30,7 +30,7 @@ spec:
       initContainers:
       - name: fix-permissions
         image: busybox:latest
-        command: ["sh", "-c", "chown -R 65534:65534 /prometheus && chmod -R 777 /prometheus"]
+        command: ["sh", "-c", "chown -R 65534:65534 /prometheus && chmod -R 775 /prometheus"]
         volumeMounts:
         - name: prometheus-storage
           mountPath: /prometheus
@@ -42,7 +42,7 @@ spec:
         args:
         - '--config.file=/etc/prometheus/prometheus.yml'
         - '--storage.tsdb.path=/prometheus'
-        - '--web.enable-lifecycle'  # Optional: for Prometheus reloads
+        - '--web.enable-lifecycle'
         ports:
         - containerPort: 9090
         volumeMounts:
