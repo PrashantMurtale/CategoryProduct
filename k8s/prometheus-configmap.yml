@@ -15,11 +15,11 @@ data:
         metrics_path: '/actuator/prometheus'
         scrape_interval: 5s
         static_configs:
-          - targets: ['springboot-service.default.svc.cluster.local:8080']
+          - targets: ['springboot-service:8080']
             labels:
               application: 'category-product'
       - job_name: 'mysql'
         static_configs:
-          - targets: ['mysql-exporter-service.default.svc.cluster.local:9104']
+          - targets: ['mysql-exporter-service:9104']
             labels:
               application: 'mysql'
