@@ -1,0 +1,51 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: monitoring-ingress
+  namespace: default
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+    kubernetes.io/ingress.allow-http: "true"  # Enable while setting up HTTPS
+    # Optional: Static IP and managed cert
+    # kubernetes.io/ingress.global-static-ip-name: "monitoring-static-ip"
+    # networking.gke.io/managed-certificates: "monitoring-cert"
+spec:
+  # TLS (uncomment for HTTPS; create secret with cert/key or use managed certs)
+  # tls:
+  # - hosts:
+  #   - "*.example.com"
+  #   secretName: monitoring-tls
+  rules:
+  # Spring Boot App
+  - host: categoryproduct.example.com  # Replace with your domain
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: mysqlspring-service  # From your mysqlspringdeployment.yaml
+            port:
+              number: 80
+  # Prometheus
+  - host: prometheus.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: prometheus-server  # Adjust to your Prometheus Service name
+            port:
+              number: 80
+  # Grafana
+  - host: grafana.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: grafana  # Adjust to your Grafana Service name
+            port:
+              number: 80
