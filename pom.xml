@@ -156,12 +156,6 @@
 			<artifactId>spring-boot-starter-aop</artifactId>
 		</dependency>
 
-		<!-- AOP Support -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-aop</artifactId>
-		</dependency>
-
 <!--		&lt;!&ndash; Apache Beam SDK &ndash;&gt;
 		<dependency>
 			<groupId>org.apache.beam</groupId>
